@@ -46,15 +46,28 @@ int main(int argc, char *argv[])
     string unit = "BP";
     string matrixType = "observed";
 
-    vector<chromosome> chromosomes = getChromosomes(filename);
-    for (int i = 1; i < chromosomes.size(); i++) {
-        for (int j = i; j < chromosomes.size(); j++) {
+    vector<chromosome> origChromosomes = getChromosomes(filename);
+    chromosome *fixedOrderChromosomes[origChromosomes.size()];
+
+    for(chromosome chrom : origChromosomes){
+        fixedOrderChromosomes[chrom.index] = new chromosome();
+        fixedOrderChromosomes[chrom.index]->name = chrom.name;
+        fixedOrderChromosomes[chrom.index]->index = chrom.index;
+        fixedOrderChromosomes[chrom.index]->length = chrom.length;
+    }
+
+    for (int i = 1; i < origChromosomes.size(); i++) {
+        for (int j = i; j < origChromosomes.size(); j++) {
             vector<contactRecord> records = straw(matrixType, norm, filename,
-                                                  chromosomes[i].name, chromosomes[j].name, unit, resolution);
+                                                  fixedOrderChromosomes[i]->name,
+                                                  fixedOrderChromosomes[j]->name,
+                                                  unit, resolution);
             for (contactRecord record : records) {
                 auto realCounts = static_cast<int32_t>(record.counts);
-                fprintf(fp, "%s %d %s %d %d\n", chromosomes[i].name.c_str(), record.binX,
-                        chromosomes[j].name.c_str(), record.binY, realCounts);
+                fprintf(fp, "%s %d %s %d %d\n",
+                        fixedOrderChromosomes[i]->name.c_str(), record.binX,
+                        fixedOrderChromosomes[j]->name.c_str(), record.binY,
+                        realCounts);
             }
         }
     }
